@@ -17,7 +17,7 @@
 
 ### Windows Executable
 
-Download the latest executable from the [releases page](#). No Python installation is required.  
+Download the latest executable from the [releases page](https://github.com/CS8ABG/Hamlib-UI/releases). No Python installation is required.  
 
 1. Download `HamlibUI.exe`.
 2. Run the executable.
@@ -48,4 +48,5 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 * The GUI automatically detects available serial ports.
 * The downloaded Hamlib release is stored in the `hamlib` folder in the same directory as the executable.
 * Configuration settings are saved automatically and restored on the next launch.
+
 
