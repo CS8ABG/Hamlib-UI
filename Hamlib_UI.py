@@ -434,14 +434,27 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_runner(self, runner, tab):
         args=[]
         if tab=="radio":
-            idx=self.radio_combo.currentIndex(); data=self.radio_combo.itemData(idx)
-            if not data: QtWidgets.QMessageBox.warning(self,"No radio","Select radio"); return
-            args=[f"--model={data['id']}"]
-            device=self.serial_combo.currentText(); args.append(f"--rig-file={device}" if device else "")
-            if self.ptt_checkbox.isChecked(): args.append(f"--ptt-file={self.ptt_port_combo.currentText()}"); args.append(f"--ptt-type={self.ptt_type_combo.currentText()}")
-            baud=self.baud_combo.currentText(); args.append(f"--serial-speed={baud}" if baud else "")
-            civ=self.civ_edit.text().strip(); args.append(f"--civaddress={civ}" if civ else "")
-            port=self.tcp_spin.value(); args.append(f"--port={port}")
+            idx = self.radio_combo.currentIndex()
+            data = self.radio_combo.itemData(idx)
+            if not data: 
+                QtWidgets.QMessageBox.warning(self,"No radio","Select radio")
+                return
+            args = [f"--model={data['id']}"]
+            device = self.serial_combo.currentText()
+            if device:
+                args.append(f"--rig-file={device}")
+            if "icom" in data.get("mfg","").lower():
+                civ = self.civ_edit.text().strip()
+                if civ:
+                    args.append(f"--civaddr={civ}")
+            if self.ptt_checkbox.isChecked():
+                args.append(f"--ptt-file={self.ptt_port_combo.currentText()}")
+                args.append(f"--ptt-type={self.ptt_type_combo.currentText()}")
+            baud = self.baud_combo.currentText()
+            if baud:
+                args.append(f"--serial-speed={baud}")
+            port = self.tcp_spin.value()
+            args.append(f"--port={port}")
         elif tab=="rotor":
             device=self.rot_serial_combo.currentText(); args.append(f"--rot-file={device}" if device else "")
             baud=self.rot_baud_combo.currentText(); args.append(f"--serial-speed={baud}" if baud else "")
