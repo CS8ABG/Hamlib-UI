@@ -335,7 +335,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.amp_baud_combo.setCurrentText(self.settings.value("amp_baud", "9600"))
         self.amp_port_spin.setValue(int(self.settings.value("amp_tcp", 4534)))
         self.show_output_checkbox.setChecked(self.settings.value("show_output", False, type=bool))
-        QtCore.QTimer.singleShot(500, self.restore_selected_items)
     def restore_selected_items(self):
         for combo, id_value in [(self.radio_combo, self.settings.value("radio_id", "")),
                                 (self.rot_combo, self.settings.value("rotor_id", "")),
@@ -456,13 +455,25 @@ class MainWindow(QtWidgets.QMainWindow):
             port = self.tcp_spin.value()
             args.append(f"--port={port}")
         elif tab=="rotor":
+            idx = self.rot_combo.currentIndex()
+            data = self.rot_combo.itemData(idx)
+            if not data:
+                QtWidgets.QMessageBox.warning(self,"No rotor","Select rotor")
+                return
             device=self.rot_serial_combo.currentText(); args.append(f"--rot-file={device}" if device else "")
             baud=self.rot_baud_combo.currentText(); args.append(f"--serial-speed={baud}" if baud else "")
             args.append(f"--port={self.rot_port_spin.value()}")
+            args.append(f"--model={data['id']}")
         elif tab=="amp":
+            idx = self.amp_combo.currentIndex()
+            data = self.amp_combo.itemData(idx)
+            if not data:
+                QtWidgets.QMessageBox.warning(self,"No amplifier","Select amplifier")
+                return
             device=self.amp_serial_combo.currentText(); args.append(f"--amp-file={device}" if device else "")
             baud=self.amp_baud_combo.currentText(); args.append(f"--serial-speed={baud}" if baud else "")
             args.append(f"--port={self.amp_port_spin.value()}")
+            args.append(f"--model={data['id']}")
         args = [a for a in args if a]; args.append("-vvvv")
         self._append_output(f"Starting {tab} with: {' '.join(args)}")
         runner.start(args)
@@ -493,9 +504,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rig_thread.result.connect(self._on_rig_list_result)
         self.rig_thread.start()
     def _on_rig_list_result(self, rigs):
+        rigs = sorted(rigs, key=lambda r: r['label'].lower())
         self.radio_combo.clear()
         for r in rigs:
             self.radio_combo.addItem(r['label'], r)
+        self.restore_selected_items()
     def load_rotor_amp_list(self):
         self.rot_thread = RotctlListThread()
         self.rot_thread.result.connect(self._on_rot_list_result)
@@ -504,13 +517,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.amp_thread.result.connect(self._on_amp_list_result)
         self.amp_thread.start()
     def _on_rot_list_result(self, devices):
+        devices = sorted(devices, key=lambda d: d['label'].lower())
         self.rot_combo.clear()
         for d in devices:
             self.rot_combo.addItem(d['label'], d)
+        self.restore_selected_items()
     def _on_amp_list_result(self, devices):
+        devices = sorted(devices, key=lambda d: d['label'].lower())
         self.amp_combo.clear()
         for d in devices:
             self.amp_combo.addItem(d['label'], d)
+        self.restore_selected_items()
     def _on_radio_changed(self,idx):
         data=self.radio_combo.itemData(idx)
         self.civ_edit.setEnabled("icom" in (data.get("mfg","").lower()) if data else False)
